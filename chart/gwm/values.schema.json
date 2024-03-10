@@ -1,0 +1,799 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+
+  "$defs": {
+    "name": {
+      "type": "string",
+      "pattern": "^(\\*|\\*-)?[a-z0-9]([-a-z0-9]*[a-z0-9])?$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\*|-\\*)?$"
+    },
+
+    "nameOrNull": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/name"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+
+    "portNumber": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536
+    },
+
+    "annotations": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      }
+    },
+
+    "quantity": {
+      "type": "string",
+      "pattern": "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+    },
+
+    "percentage": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+
+    "replicas": {
+      "type": "integer",
+      "minimum": 0
+    },
+
+    "securityContext": {
+      "seLinuxOptions": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+
+      "seccompProfile": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "localhostProfile": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+
+      "windowsOptions": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gmsaCredentialSpec": {
+            "type": "string"
+          },
+          "gmsaCredentialSpecName": {
+            "type": "string"
+          },
+          "hostProcess": {
+            "type": "boolean"
+          },
+          "runAsUserName": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cpu",
+        "memory"
+      ],
+      "properties": {
+        "cpu": {
+          "$ref": "#/$defs/quantity"
+        },
+        "memory": {
+          "$ref": "#/$defs/quantity"
+        }
+      }
+    },
+
+    "utilization": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/percentage"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+
+    "expressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "DoesNotExist",
+              "Exists",
+              "Gt",
+              "In",
+              "Lt",
+              "NotIn"
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        ".*": {
+          "type": "string"
+        }
+      }
+    },
+
+    "labelsArray": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/labels"
+      }
+    },
+
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "matchExpressions": {
+          "$ref": "#/$defs/expressions"
+        },
+        "matchLabels": {
+          "$ref": "#/$defs/labelsArray"
+        }
+      }
+    },
+
+    "nodeTerm": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "matchExpressions": {
+          "$ref": "#/$defs/expressions"
+        },
+        "matchFields": {
+          "$ref": "#/$defs/expressions"
+        }
+      }
+    },
+
+    "topologyTerm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topologyKey"
+      ],
+      "properties": {
+        "labelSelector": {
+          "$ref": "#/$defs/selector"
+        },
+        "namespaceSelector": {
+          "$ref": "#/$defs/selector"
+        },
+        "namespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/name"
+          }
+        },
+        "topologyKey": {
+          "type": "string"
+        }
+      }
+    },
+
+    "affinity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preferredDuringSchedulingIgnoredDuringExecution": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "podAffinityTerm",
+              "weight"
+            ],
+            "properties": {
+              "podAffinityTerm": {
+                "$ref": "#/$defs/topologyTerm"
+              },
+              "weight": {
+                "$ref": "#/$defs/percentage"
+              }
+            }
+          }
+        },
+
+        "requiredDuringSchedulingIgnoredDuringExecution": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/topologyTerm"
+          }
+        }
+      }
+    }
+  },
+
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "replicas",
+    "image",
+    "imagePullSecrets",
+    "gwm",
+    "serviceAccount",
+    "podAnnotations",
+    "podSecurityContext",
+    "securityContext",
+    "service",
+    "ingress",
+    "resources",
+    "autoscaling",
+    "nodeSelector",
+    "tolerations",
+    "affinity"
+  ],
+  "properties": {
+    "global": {
+      "type": "object"
+    },
+
+    "nameOverride": {
+      "$ref": "#/$defs/nameOrNull"
+    },
+
+    "fullnameOverride": {
+      "$ref": "#/$defs/nameOrNull"
+    },
+
+    "replicas": {
+      "$ref": "#/$defs/replicas"
+    },
+
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": [
+            "Always",
+            "IfNotPresent",
+            "Never"
+          ]
+        },
+        "tag": {
+          "type": "string"
+        }
+      }
+    },
+
+    "imagePullSecrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/$defs/name"
+          }
+        }
+      }
+    },
+
+    "gwm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "port",
+        "search",
+        "replace",
+        "forward",
+        "logLevel"
+      ],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "$ref": "#/$defs/portNumber"
+        },
+        "search": {
+          "type": "string"
+        },
+        "replace": {
+          "type": "string"
+        },
+        "forward": {
+          "type": "string"
+        },
+        "logLevel": {
+          "type": "string",
+          "enum": [
+            "panic",
+            "fatal",
+            "error",
+            "warn",
+            "info",
+            "debug",
+            "trace"
+          ]
+        }
+      }
+    },
+
+    "serviceAccount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "create",
+        "annotations",
+        "name"
+      ],
+      "properties": {
+        "create": {
+          "type": "boolean"
+        },
+        "annotations": {
+          "$ref": "#/$defs/annotations"
+        },
+        "name": {
+          "$ref": "#/$defs/nameOrNull"
+        }
+      }
+    },
+
+    "podAnnotations": {
+      "$ref": "#/$defs/annotations"
+    },
+
+    "podSecurityContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fsGroup": {
+          "type": "integer"
+        },
+        "fsGroupChangePolicy": {
+          "type": "string",
+          "enum": [
+            "Always",
+            "OnRootMismatch"
+          ]
+        },
+        "runAsGroup": {
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "type": "integer"
+        },
+        "seLinuxOptions": {
+          "$ref": "#/$defs/securityContext/seLinuxOptions"
+        },
+        "seccompProfile": {
+          "$ref": "#/$defs/securityContext/seccompProfile"
+        },
+        "supplementalGroups": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "sysctls": {
+          "type": "object",
+          "required": [
+            "name",
+            "value"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        "windowsOptions": {
+          "$ref": "#/$defs/securityContext/windowsOptions"
+        }
+      }
+    },
+
+    "securityContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowPrivilegeEscalation": {
+          "type": "boolean"
+        },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "add": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "drop": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "privileged": {
+          "type": "boolean"
+        },
+        "procMount": {
+          "type": "string",
+          "enum": [
+            "Default",
+            "Unmasked"
+          ]
+        },
+        "readOnlyRootFilesystem": {
+          "type": "boolean"
+        },
+        "runAsGroup": {
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "type": "integer"
+        },
+        "seLinuxOptions": {
+          "$ref": "#/$defs/securityContext/seLinuxOptions"
+        },
+        "seccompProfile": {
+          "$ref": "#/$defs/securityContext/seccompProfile"
+        },
+        "windowsOptions": {
+          "$ref": "#/$defs/securityContext/windowsOptions"
+        }
+      }
+    },
+
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "port"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "ClusterIP",
+            "ExternalName",
+            "LoadBalancer",
+            "NodePort"
+          ]
+        },
+        "port": {
+          "$ref": "#/$defs/portNumber"
+        }
+      }
+    },
+
+    "ingress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "className",
+        "annotations",
+        "hosts",
+        "tls"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "className": {
+          "$ref": "#/$defs/nameOrNull"
+        },
+        "annotations": {
+          "$ref": "#/$defs/annotations"
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "host",
+              "paths"
+            ],
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "path",
+                    "pathType"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "pathType": {
+                      "type": "string",
+                      "enum": [
+                        "Exact",
+                        "ImplementationSpecific",
+                        "Prefix"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "secretName",
+              "hosts"
+            ],
+            "properties": {
+              "secretName": {
+                "$ref": "#/$defs/name"
+              },
+              "hosts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requests",
+        "limits"
+      ],
+      "properties": {
+        "requests": {
+          "$ref": "#/$defs/resources"
+        },
+        "limits": {
+          "$ref": "#/$defs/resources"
+        }
+      }
+    },
+
+    "autoscaling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "replicas",
+        "targetUtilization"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "replicas": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "$ref": "#/$defs/replicas"
+            },
+            "max": {
+              "$ref": "#/$defs/replicas"
+            }
+          }
+        },
+        "targetUtilization": {
+          "type": "object",
+          "additionalProperties": false,
+          "reuired": [
+            "cpu",
+            "memory"
+          ],
+          "properties": {
+            "cpu": {
+              "$ref": "#/$defs/utilization"
+            },
+            "memory": {
+              "$ref": "#/$defs/utilization"
+            }
+          }
+        }
+      }
+    },
+
+    "nodeSelector": {
+      "$ref": "#/$defs/labels"
+    },
+
+    "tolerations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "effect",
+          "key"
+        ],
+        "properties": {
+          "effect": {
+            "type": "string",
+            "enum": [
+              "NoExecute",
+              "NoSchedule",
+              "PreferNoSchedule"
+            ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "Equal",
+              "Exists"
+            ]
+          },
+          "tolerationSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "affinity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodeAffinity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "preferredDuringSchedulingIgnoredDuringExecution": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "preference",
+                  "weight"
+                ],
+                "properties": {
+                  "preference": {
+                    "$ref": "#/$defs/nodeTerm"
+                  },
+                  "weight": {
+                    "$ref": "#/$defs/percentage"
+                  }
+                }
+              }
+            },
+
+            "requiredDuringSchedulingIgnoredDuringExecution": {
+              "type": "object",
+              "reqquired": [
+                "nodeSelectorTerms"
+              ],
+              "properties": {
+                "nodeSelectorTerms": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/nodeTerm"
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "podAffinity": {
+          "$ref": "#/$defs/affinity"
+        },
+
+        "podAntiAffinity": {
+          "$ref": "#/$defs/affinity"
+        }
+      }
+    }
+
+  }
+}

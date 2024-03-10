@@ -1,0 +1,42 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-json
+      - id: check-yaml
+        args:
+          - --allow-multiple-documents
+        exclude: templates/
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+      - id: trailing-whitespace
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        name: Markdownlint
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args:
+          - --strict
+        exclude: .*/templates/.*\.yaml
+
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.56.2
+    hooks:
+      - id: golangci-lint
+
+  - repo: https://github.com/jtyr/kubeconform-helm
+    rev: v0.1.16
+    hooks:
+      - id: kubeconform-helm
+        args:
+          - --strict
+          - --charts-path=chart
+        files: ^chart/[^/]+/(\.kubeconform|\.helmignore|templates/NOTES.txt|.*\.(ya?ml|json|tpl))$

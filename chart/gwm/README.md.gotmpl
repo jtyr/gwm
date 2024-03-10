@@ -1,0 +1,17 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+## Installation
+
+```shell
+helm upgrade --install --namespace gwm --create-namespace gwm ghcr.io/jtyr/helm/gwm
+```
+
+{{ template "chart.valuesSection" . }}
+
+## Author
+
+Jiri Tyr

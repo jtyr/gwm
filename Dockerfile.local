@@ -1,0 +1,8 @@
+FROM golang AS builder
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -o /tmp/gwm ./cmd/gwm/main.go
+
+FROM scratch
+COPY --from=builder /tmp/gwm /bin/
+CMD ["/bin/gwm"]
