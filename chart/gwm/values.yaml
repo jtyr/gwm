@@ -1,0 +1,168 @@
+# -- Name override.
+nameOverride: null
+# -- Full name override.
+fullnameOverride: null
+
+# -- Number of replicas. Ignored when `autoscaling.enabled: true`.
+replicas: 1
+
+image:
+  # -- Docker image.
+  repository: ghcr.io/jtyr/docker/gwm
+  # -- Docker image pull policy.
+  pullPolicy: IfNotPresent
+  # -- Docker image tag. Overrides the image tag whose default is the chart `appVersion`.
+  tag: ""
+
+# -- Image pull secrets.
+imagePullSecrets: []
+
+gwm:
+  # -- Host on which GWM will run.
+  host: 0.0.0.0
+  # -- Port number on which GWM will run.
+  port: 80
+  # -- Regexp to search for a specific string to be replaced.
+  search: ^http://git.localhost/
+  # -- Regexp used to replace the found string.
+  replace: http://gitea-http.gitea:3000/
+  # -- URL where GWM forwards requests.
+  forward: http://argocd-server.argocd/api/webhook
+  # -- The GWM log level.
+  logLevel: info
+
+serviceAccount:
+  # -- Whether a Service Account should be created.
+  create: true
+  # -- Annotations to add to the service account.
+  annotations: {}
+  # -- The name of the Service account to use. If not set and `create: true`, a name is generated using the `fullname` template.
+  name: null
+
+# -- Pod annotations.
+podAnnotations: {}
+
+# -- Pod security context.
+podSecurityContext: {}
+
+# Container security context.
+securityContext:
+  capabilities:
+    # -- List of capabilities to drop.
+    drop:
+      - ALL
+  # -- Whether to mount the filesystem as read-only.
+  readOnlyRootFilesystem: true
+  # -- Whether to run as non-root user.
+  runAsNonRoot: true
+  # -- User name or ID to to use to run the container.
+  runAsUser: 65534
+  # -- Whether to allow privilege escallation.
+  allowPrivilegeEscalation: false
+
+service:
+  # -- Service type.
+  type: ClusterIP
+  # -- Service port.
+  port: 80
+
+ingress:
+  enabled: false
+  # -- Ingress class name. Leave empty to use the default Ingress controller class.
+  className: null
+  # -- Ingress annotations.
+  annotations: {}
+  hosts:
+    -
+      # -- Ingress host name.
+      host: gwm.localhost
+      paths:
+        -
+          # -- Path where the ingress points.
+          path: /
+          # -- Type of the Ingress path.
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  requests:
+    # -- Minimum amount of CPU the Pod requires to be scheduled.
+    cpu: 5m
+    # -- Minimum amount of memory the Pod requires to be scheduled.
+    memory: 10Mi
+  limits:
+    # -- Maximum amount of CPU the Pod is limited to use.
+    cpu: 10m
+    # -- Maximum amount of memory the Pod is limited to use.
+    memory: 20Mi
+
+autoscaling:
+  # -- Whether the Horizontal Pod Autoscaling is enabled or not.
+  enabled: false
+  replicas:
+    # -- Minimum number of Pods to scale down.
+    min: 1
+    # -- Maximum number of Pods to scale up.
+    max: 10
+  targetUtilization:
+    # -- Target average CPU utilization when the autoscaling is triggered.
+    cpu: 80
+    # -- Target average memory utilization when the autoscaling is triggered.
+    memory: null
+
+# -- Node selector.
+nodeSelector: {}
+# nodeSelector:
+#   foo: bar
+
+# -- Pod tolerations.
+tolerations: []
+# tolerations:
+#   - key: key1
+#     operator: Equal
+#     value: value1
+#     effect: NoSchedule
+
+# -- Pod affinity.
+affinity: {}
+# affinity:
+#   nodeAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#       nodeSelectorTerms:
+#         - matchExpressions:
+#             - key: topology.kubernetes.io/zone
+#               operator: In
+#               values:
+#                 - antarctica-east1
+#                 - antarctica-west1
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#       - weight: 1
+#         preference:
+#           matchExpressions:
+#             - key: another-node-label-key
+#               operator: In
+#               values:
+#                 - another-node-label-value
+#   podAffinity:
+#     requiredDuringSchedulingIgnoredDuringExecution:
+#       - labelSelector:
+#           matchExpressions:
+#             - key: security
+#               operator: In
+#               values:
+#                 - S1
+#         topologyKey: topology.kubernetes.io/zone
+#   podAntiAffinity:
+#     preferredDuringSchedulingIgnoredDuringExecution:
+#       - weight: 100
+#         podAffinityTerm:
+#           labelSelector:
+#             matchExpressions:
+#               - key: security
+#                 operator: In
+#                 values:
+#                   - S2
+#           topologyKey: topology.kubernetes.io/zone

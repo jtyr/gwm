@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "gwm.fullname" . }}
+  labels: {{- include "gwm.labels" . | nindent 4 }}
+spec:
+  selector: {{- include "gwm.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  type: {{ .Values.service.type }}
